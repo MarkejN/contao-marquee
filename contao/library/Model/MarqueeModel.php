@@ -17,6 +17,7 @@
  */
 namespace Respinar\Marquee\Model;
 
+use Contao\Model;
 
 /**
  * Reads and writes Marquee
@@ -25,7 +26,7 @@ namespace Respinar\Marquee\Model;
  * @author    Hamid Abbaszadeh <http://respinar.com>
  * @copyright Hamid Abbaszadeh 2013-2014
  */
-class MarqueeModel extends \Model
+class MarqueeModel extends Model
 {
 
 	/**

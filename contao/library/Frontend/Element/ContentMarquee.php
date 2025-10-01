@@ -14,6 +14,8 @@
  */
 namespace Respinar\Marquee\Frontend\Element;
 
+use Contao\BackendTemplate;
+use Contao\ContentElement;
 use Respinar\Marquee\Model\MarqueeModel;
 use Respinar\Marquee\Model\MarqueeTextModel;
 
@@ -25,7 +27,7 @@ use Respinar\Marquee\Model\MarqueeTextModel;
  * @author     Hamid Abbaszadeh info@respinar.com
  * @package    Devtools
  */
-class ContentMarquee extends \ContentElement
+class ContentMarquee extends ContentElement
 {
 
 	/**
@@ -43,7 +45,7 @@ class ContentMarquee extends \ContentElement
 	{
 		if (TL_MODE == 'BE')
 		{
-			$objTemplate = new \BackendTemplate('be_wildcard');
+			$objTemplate = new BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### ' . utf8_strtoupper($GLOBALS['TL_LANG']['FMD']['marquee'][0]) . ' ###';
 

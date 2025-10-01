@@ -8,7 +8,12 @@
  * @license LGPL-3.0-or-later
  */
 
+use Contao\Backend;
+use Contao\DataContainer;
 use Contao\DC_Table;
+use Contao\Image;
+use Contao\Input;
+use Contao\Versions;
 
 /**
  * Table tl_marquee_text
