@@ -19,6 +19,7 @@ namespace Respinar\Marquee\Model;
 
 use Contao\Model;
 use Contao\Model\Collection;
+use Contao\System;
 
 /**
  * Reads and writes Members Act
@@ -57,7 +58,7 @@ class MarqueeTextModel extends Model
 		$arrColumns = array("$t.pid=?");
 
 
-		if (!BE_USER_LOGGED_IN)
+		if (!System::getContainer()->get('contao.security.token_checker')->isPreviewMode())
 		{
 			$time = time();
 			$arrColumns[] = "($t.start='' OR $t.start<$time) AND ($t.stop='' OR $t.stop>$time) AND $t.published=1";

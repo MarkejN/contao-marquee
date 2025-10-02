@@ -11,7 +11,10 @@
  /**
  * Back end modules
  */
-array_insert($GLOBALS['BE_MOD']['content'], 1, array
+
+use Contao\ArrayUtil;
+
+ArrayUtil::arrayInsert($GLOBALS['BE_MOD']['content'], 1, array
 (
 	'marquee' => array
 	(

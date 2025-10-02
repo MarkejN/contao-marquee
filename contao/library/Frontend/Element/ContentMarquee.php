@@ -16,9 +16,10 @@ namespace Respinar\Marquee\Frontend\Element;
 
 use Contao\BackendTemplate;
 use Contao\ContentElement;
+use Contao\System;
 use Respinar\Marquee\Model\MarqueeModel;
 use Respinar\Marquee\Model\MarqueeTextModel;
-
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class ModuleMarquee
@@ -43,11 +44,11 @@ class ContentMarquee extends ContentElement
 	 */
 	public function generate()
 	{
-		if (TL_MODE == 'BE')
+		if (System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest(System::getContainer()->get('request_stack')->getCurrentRequest() ?? Request::create('')))
 		{
 			$objTemplate = new BackendTemplate('be_wildcard');
 
-			$objTemplate->wildcard = '### ' . utf8_strtoupper($GLOBALS['TL_LANG']['FMD']['marquee'][0]) . ' ###';
+			$objTemplate->wildcard = '### ' . mb_strtoupper($GLOBALS['TL_LANG']['FMD']['marquee'][0]) . ' ###';
 
 			$objMarquee = MarqueeModel::findBy('id',$this->marquee);
 

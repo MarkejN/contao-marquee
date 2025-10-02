@@ -9,11 +9,15 @@
  */
 
 use Contao\Backend;
+use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\DataContainer;
 use Contao\DC_Table;
 use Contao\Image;
 use Contao\Input;
+use Contao\StringUtil;
+use Contao\System;
 use Contao\Versions;
+use Psr\Log\LogLevel;
 
 /**
  * Table tl_marquee_text
@@ -236,7 +240,7 @@ class tl_marquee_text extends Backend
 	 */
 	public function pagePicker(DataContainer $dc)
 	{
-		return ' <a href="' . (($dc->value == '' || strpos($dc->value, '{{link_url::') !== false) ? 'contao/page.php' : 'contao/file.php') . '?do=' . Input::get('do') . '&amp;table=' . $dc->table . '&amp;field=' . $dc->field . '&amp;value=' . rawurlencode(str_replace(array('{{link_url::', '}}'), '', $dc->value)) . '&amp;switch=1' . '" title="' . specialchars($GLOBALS['TL_LANG']['MSC']['pagepicker']) . '" onclick="Backend.getScrollOffset();Backend.openModalSelector({\'width\':768,\'title\':\'' . specialchars(str_replace("'", "\\'", $GLOBALS['TL_LANG']['MOD']['page'][0])) . '\',\'url\':this.href,\'id\':\'' . $dc->field . '\',\'tag\':\'ctrl_'. $dc->field . ((Input::get('act') == 'editAll') ? '_' . $dc->id : '') . '\',\'self\':this});return false">' . Image::getHtml('pickpage.gif', $GLOBALS['TL_LANG']['MSC']['pagepicker'], 'style="vertical-align:top;cursor:pointer"') . '</a>';
+		return ' <a href="' . (($dc->value == '' || strpos($dc->value, '{{link_url::') !== false) ? 'contao/page.php' : 'contao/file.php') . '?do=' . Input::get('do') . '&amp;table=' . $dc->table . '&amp;field=' . $dc->field . '&amp;value=' . rawurlencode(str_replace(array('{{link_url::', '}}'), '', $dc->value)) . '&amp;switch=1' . '" title="' . StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pagepicker']) . '" onclick="Backend.getScrollOffset();Backend.openModalSelector({\'width\':768,\'title\':\'' . StringUtil::specialchars(str_replace("'", "\\'", $GLOBALS['TL_LANG']['MOD']['page'][0])) . '\',\'url\':this.href,\'id\':\'' . $dc->field . '\',\'tag\':\'ctrl_'. $dc->field . ((Input::get('act') == 'editAll') ? '_' . $dc->id : '') . '\',\'self\':this});return false">' . Image::getHtml('pickpage.gif', $GLOBALS['TL_LANG']['MSC']['pagepicker'], 'style="vertical-align:top;cursor:pointer"') . '</a>';
 	}
 
     /**
@@ -272,7 +276,7 @@ class tl_marquee_text extends Backend
 			$icon = 'invisible.gif';
 		}
 
-		return '<a href="'.$this->addToUrl($href).'" title="'.specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label, 'data-state="' . ($row['published'] ? 1 : 0) . '"').'</a> ';
+		return '<a href="'.$this->addToUrl($href).'" title="'.StringUtil::specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label, 'data-state="' . ($row['published'] ? 1 : 0) . '"').'</a> ';
 	}
 
 
@@ -328,7 +332,7 @@ class tl_marquee_text extends Backend
 					   ->execute($intId);
 
 		$objVersions->create();
-		$this->log('A new version of record "tl_marquee_text.id='.$intId.'" has been created'.$this->getParentEntries('tl_marquee_text', $intId), __METHOD__, TL_GENERAL);
+		System::getContainer()->get('monolog.logger.contao')->log(LogLevel::INFO, 'A new version of record "tl_marquee_text.id='.$intId.'" has been created'.$this->getParentEntries('tl_marquee_text', $intId), ['contao' => new ContaoContext(__METHOD__, ContaoContext::GENERAL)]);
 	}
 }
 
