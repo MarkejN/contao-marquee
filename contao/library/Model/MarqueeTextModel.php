@@ -69,15 +69,15 @@ class MarqueeTextModel extends Model
 
 
 	/**
-     * Find published news items by their parent ID
-     *
-     * @param integer $intId      The news archive ID
-     * @param integer $intLimit   An optional limit
-     * @param array   $arrOptions An optional options array
-     *
-     * @return Collection|null A collection of models or null if there are no news
-     */
-    public static function findPublishedByPid($intId,array $arrOptions=array())
+	 * Find published news items by their parent ID
+	 *
+	 * @param integer $intId      The news archive ID
+	 * @param integer $intLimit   An optional limit
+	 * @param array   $arrOptions An optional options array
+	 *
+	 * @return Collection|null A collection of models or null if there are no news
+	 */
+	public static function findPublishedByPid($intId,array $arrOptions=array())
 	{
 		$time = time();
 		$t = static::$strTable;
