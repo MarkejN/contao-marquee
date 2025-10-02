@@ -19,7 +19,6 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD']['content'], 1, array
 	'marquee' => array
 	(
 		'tables' => array('tl_marquee', 'tl_marquee_text'),
-		'icon'   => 'system/modules/marquee/assets/icon.png'
 	)
 ));
 

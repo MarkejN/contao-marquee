@@ -9,15 +9,11 @@
  */
 
 use Contao\Backend;
-use Contao\CoreBundle\Monolog\ContaoContext;
-use Contao\DataContainer;
+use Contao\CoreBundle\Security\ContaoCorePermissions;
 use Contao\DC_Table;
 use Contao\Image;
-use Contao\Input;
 use Contao\StringUtil;
 use Contao\System;
-use Contao\Versions;
-use Psr\Log\LogLevel;
 
 /**
  * Table tl_marquee_text
@@ -51,11 +47,10 @@ $GLOBALS['TL_DCA']['tl_marquee_text'] = array
             'fields'                  => array('sorting'),
             'panelLayout'             => 'filter;search,limit',
             'headerFields'            => array('title', 'tstamp'),
-            'child_record_callback'   => array('tl_marquee_text', 'listMarqueeText'),
 		),
 		'label' => array
 		(
-			'fields'                  => array(''),
+			'fields'                  => array('text'),
 			'format'                  => '%s'
 		),
 		'global_operations' => array
@@ -74,26 +69,26 @@ $GLOBALS['TL_DCA']['tl_marquee_text'] = array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_marquee_text']['edit'],
 				'href'                => 'act=edit',
-				'icon'                => 'edit.gif'
+				'icon'                => 'edit.svg'
 			),
 			'copy' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_marquee_text']['copy'],
 				'href'                => 'act=copy',
-				'icon'                => 'copy.gif'
+				'icon'                => 'copy.svg'
 			),
 			'delete' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_marquee_text']['delete'],
 				'href'                => 'act=delete',
-				'icon'                => 'delete.gif',
+				'icon'                => 'delete.svg',
 				'attributes'          => 'onclick="if(!confirm(\'' . $GLOBALS['TL_LANG']['MSC']['deleteConfirm'] . '\'))return false;Backend.getScrollOffset()"'
 			),
             'toggle' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_marquee_text']['toggle'],
-				'icon'                => 'visible.gif',
-				'attributes'          => 'onclick="Backend.getScrollOffset();return AjaxRequest.toggleVisibility(this,%s)"',
+				'href'                => 'act=toggle&amp;field=published',
+				'icon'                => 'visible.svg',
 				'button_callback'     => array('tl_marquee_text', 'toggleIcon')
 			),
 			'show' => array
@@ -163,8 +158,7 @@ $GLOBALS['TL_DCA']['tl_marquee_text'] = array
             'exclude'                 => true,
             'search'                  => true,
             'inputType'               => 'text',
-            'eval'                    => array('rgxp'=>'url', 'decodeEntities'=>true, 'tl_class'=>'w50 wizard'),
-            'wizard'                  => array( array('tl_marquee_text', 'pagePicker') ),
+            'eval'                    => array('rgxp'=>'url', 'decodeEntities'=>true, 'tl_class'=>'w50', 'dcaPicker' => true),
             'sql'                     => "varchar(255) NOT NULL default ''"
         ),
         'target' => array
@@ -180,6 +174,7 @@ $GLOBALS['TL_DCA']['tl_marquee_text'] = array
             'label'                   => &$GLOBALS['TL_LANG']['tl_marquee_text']['published'],
             'exclude'                 => true,
             'filter'                  => true,
+			'toggle'				  => true,
             'inputType'               => 'checkbox',
             'eval'                    => array('doNotCopy'=>true, 'submitOnChange'=>true),
             'sql'                     => "char(1) NOT NULL default ''"
@@ -209,40 +204,6 @@ $GLOBALS['TL_DCA']['tl_marquee_text'] = array
  */
 class tl_marquee_text extends Backend
 {
-
-    /**
-	 * Import the back end user object
-	 */
-	public function __construct()
-	{
-		parent::__construct();
-		$this->import('BackendUser', 'User');
-	}
-
-    /**
-	 * Add the type of input field
-	 *
-	 * @param array $arrRow
-	 *
-	 * @return string
-	 */
-	public function listMarqueeText($arrRow)
-	{
-		return '<div>' . $arrRow['text'] . '</div>';
-	}
-
-    /**
-	 * Return the link picker wizard
-	 *
-	 * @param DataContainer $dc
-	 *
-	 * @return string
-	 */
-	public function pagePicker(DataContainer $dc)
-	{
-		return ' <a href="' . (($dc->value == '' || strpos($dc->value, '{{link_url::') !== false) ? 'contao/page.php' : 'contao/file.php') . '?do=' . Input::get('do') . '&amp;table=' . $dc->table . '&amp;field=' . $dc->field . '&amp;value=' . rawurlencode(str_replace(array('{{link_url::', '}}'), '', $dc->value)) . '&amp;switch=1' . '" title="' . StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['pagepicker']) . '" onclick="Backend.getScrollOffset();Backend.openModalSelector({\'width\':768,\'title\':\'' . StringUtil::specialchars(str_replace("'", "\\'", $GLOBALS['TL_LANG']['MOD']['page'][0])) . '\',\'url\':this.href,\'id\':\'' . $dc->field . '\',\'tag\':\'ctrl_'. $dc->field . ((Input::get('act') == 'editAll') ? '_' . $dc->id : '') . '\',\'self\':this});return false">' . Image::getHtml('pickpage.gif', $GLOBALS['TL_LANG']['MSC']['pagepicker'], 'style="vertical-align:top;cursor:pointer"') . '</a>';
-	}
-
     /**
 	 * Return the "toggle visibility" button
 	 *
@@ -257,82 +218,20 @@ class tl_marquee_text extends Backend
 	 */
 	public function toggleIcon($row, $href, $label, $title, $icon, $attributes)
 	{
-		if (strlen(Input::get('tid')))
+		$security = System::getContainer()->get('security.helper');
+
+		if (!$security->isGranted(ContaoCorePermissions::USER_CAN_EDIT_FIELD_OF_TABLE, 'tl_marquee_text::published'))
 		{
-			$this->toggleVisibility(Input::get('tid'), (Input::get('state') == 1), (@func_get_arg(12) ?: null));
-			$this->redirect($this->getReferer());
+			return '';
 		}
 
-		// Check permissions AFTER checking the tid, so hacking attempts are logged
-		//if (!$this->User->hasAccess('tl_marquee_text::published', 'alexf'))
-		//{
-		//	return '';
-		//}
-
-		$href .= '&amp;tid='.$row['id'].'&amp;state='.($row['published'] ? '' : 1);
+		$href .= '&amp;id=' . $row['id'];
 
 		if (!$row['published'])
 		{
-			$icon = 'invisible.gif';
+			$icon = 'invisible.svg';
 		}
 
-		return '<a href="'.$this->addToUrl($href).'" title="'.StringUtil::specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label, 'data-state="' . ($row['published'] ? 1 : 0) . '"').'</a> ';
-	}
-
-
-	/**
-	 * Disable/enable a user group
-	 *
-	 * @param integer       $intId
-	 * @param boolean       $blnVisible
-	 * @param DataContainer $dc
-	 */
-	public function toggleVisibility($intId, $blnVisible, DataContainer $dc=null)
-	{
-		// Set the ID and action
-		Input::setGet('id', $intId);
-		Input::setGet('act', 'toggle');
-
-		if ($dc)
-		{
-			$dc->id = $intId; // see #8043
-		}
-
-		//$this->checkPermission();
-
-		// Check the field access
-		// (!$this->User->hasAccess('tl_marquee_text::published', 'alexf'))
-		//{
-		//	$this->log('Not enough permissions to publish/unpublish news item ID "'.$intId.'"', __METHOD__, TL_ERROR);
-		//	$this->redirect('contao/main.php?act=error');
-		//}
-
-		$objVersions = new Versions('tl_marquee_text', $intId);
-		$objVersions->initialize();
-
-		// Trigger the save_callback
-		if (is_array($GLOBALS['TL_DCA']['tl_marquee_text']['fields']['published']['save_callback']))
-		{
-			foreach ($GLOBALS['TL_DCA']['tl_marquee_text']['fields']['published']['save_callback'] as $callback)
-			{
-				if (is_array($callback))
-				{
-					$this->import($callback[0]);
-					$blnVisible = $this->{$callback[0]}->{$callback[1]}($blnVisible, ($dc ?: $this));
-				}
-				elseif (is_callable($callback))
-				{
-					$blnVisible = $callback($blnVisible, ($dc ?: $this));
-				}
-			}
-		}
-
-		// Update the database
-		$this->Database->prepare("UPDATE tl_marquee_text SET tstamp=". time() .", published='" . ($blnVisible ? '1' : '') . "' WHERE id=?")
-					   ->execute($intId);
-
-		$objVersions->create();
-		System::getContainer()->get('monolog.logger.contao')->log(LogLevel::INFO, 'A new version of record "tl_marquee_text.id='.$intId.'" has been created'.$this->getParentEntries('tl_marquee_text', $intId), ['contao' => new ContaoContext(__METHOD__, ContaoContext::GENERAL)]);
+		return '<a href="' . $this->addToUrl($href) . '" title="' . StringUtil::specialchars($title) . '" onclick="Backend.getScrollOffset();return AjaxRequest.toggleField(this,true)">' . Image::getHtml($icon, $label, 'data-icon="' . Image::getPath('visible.svg') . '" data-icon-disabled="' . Image::getPath('invisible.svg') . '" data-state="' . ($row['published'] ? 1 : 0) . '"') . '</a> ';
 	}
 }
-
