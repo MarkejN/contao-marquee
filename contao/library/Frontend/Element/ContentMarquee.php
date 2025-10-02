@@ -65,9 +65,9 @@ class ContentMarquee extends ContentElement
 		{
 			return '';
 		}
-        
-       $GLOBALS['TL_JAVASCRIPT'][] = 'system/modules/marquee/assets/jquery.marquee.js|static';
-       $GLOBALS['TL_CSS'][]        = 'system/modules/marquee/assets/marquee.min.css|static';
+
+       $GLOBALS['TL_JAVASCRIPT'][] = 'bundles/contaomarquee/jquery.marquee.js|static';
+       $GLOBALS['TL_CSS'][]        = 'bundles/contaomarquee/marquee.min.css|static';
 
 		return parent::generate();
 	}
