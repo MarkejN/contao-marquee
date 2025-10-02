@@ -1,2 +1,5 @@
 # tx
 /.tx/
+
+vendor/
+composer.lock
